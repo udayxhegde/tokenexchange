@@ -1,0 +1,9 @@
+*.js
+node_modules/
+.vscode
+.deployment
+.env.local
+federate proto-code-workspace
+
+
+

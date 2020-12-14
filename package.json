@@ -1,0 +1,26 @@
+{
+  "name": "tokenfederate",
+  "version": "1.0.0",
+  "description": "token federate",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \" no test specified\" && exit 0",
+    "build": "tsc -p ./src",
+    "start": "node ./src/app.js"
+  },
+  "author": "uday",
+  "license": "ISC",
+  "dependencies": {
+    "@azure/core-http": "^1.2.0",
+    "@azure/identity": "^1.2.0",
+    "@types/node": "^13.7.7",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-pino-logger": "^5.0.0",
+    "http-status-codes": "^1.4.0",
+    "jsonwebtoken": "^8.5.1",
+    "pino": "^6.7.0",
+    "pino-pretty": "^4.3.0",
+    "typescript": "^3.8.3"
+  }
+}
