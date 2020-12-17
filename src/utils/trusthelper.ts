@@ -40,7 +40,7 @@ function validateTrust(trust) {
     
   
 function readTrust(id, subject, callback) {
-    var query = "SELECT * from r where r.type='trust' AND r.mid = '" + id + "AND r.item.subject = '" + subject +"'";
+    var query = "SELECT * from r where r.type='trust' AND r.mid = '" + id + "' AND r.item.subject = '" + subject +"'";
 
     sqlStore.fetchQueryDbItem(query, function(error, values) {
         if (error) {
