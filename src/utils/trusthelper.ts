@@ -48,7 +48,7 @@ function readTrust(id, subject, callback) {
             callback(error);
         }
         else {
-            logger.debug("sqlstore read trust sucess", values);
+            logger.debug("sqlstore read trust sucess %o", values);
             callback(null, values);
         }
     });
@@ -85,22 +85,26 @@ module.exports = {
         else {
             readTrust(id, trust.subject, function(error, result) {
                 if (error) {
+                    logger.error("sqlstore create failed", error);
+                    callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:error});
+                }
+                else if (result.length > 0) {
+                    logger.error("trust already exists in add trust, number of trusts %d", result.length);
+                    callback({status: HttpStatus.BAD_REQUEST, message:"trust already exists"});
+                }
+                else {
                     var wrapper = {"item" : trust};
                     wrapper['type'] = "trust";
                     wrapper['mid'] = id;
 
                     sqlStore.createDbItem(wrapper, function(error, result) {
                         if (error) {
-                            logger.error("sqlstore create failed", error);
                             callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:error});
                         }
                         else {
-                            callback(null, {'id' : result.resource.id, ...result.resource.item});
+                            callback(null, {...result.resource.item});
                         }
                     });
-                }
-                else {
-                    callback({status: HttpStatus.BAD_REQUEST, message:"subject already exists"});
                 }
             });
         }
@@ -134,7 +138,23 @@ module.exports = {
         });
     },
 
-    deleteTrust : function( id, callback ) {
-        sqlStore.deleteDbItem(id, callback);
+    deleteTrust : function( id, subject, callback ) {
+        readTrust(id, subject, function(err, result) {
+            if (err) {
+                callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:err});
+            }
+            else {
+                if (result.length == 0) {
+                    callback({status: HttpStatus.NOT_FOUND, message:"no matching trust"});      
+                }
+                else if (result.length > 1) {
+                    callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:"more than one trust"});      
+                } 
+                else {
+                    sqlStore.deleteDbItem(result[0].id, callback);
+                    callback(null, result.id);
+                }
+            }
+        })
     }
 };

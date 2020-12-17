@@ -68,6 +68,9 @@ trustRoute.route('/id/:id/federatedId/:subject')
                 return res.json(result);
             }
         });
+    })
+    .delete(function(req,res) {
+        
     });
 
 module.exports = trustRoute;
