@@ -30,7 +30,7 @@ trustRoute.route('/')
 
 trustRoute.route('/id/:id')
     .get(function (req, res) {
-        trustHelper.queryTrusts(req.param.id, req.query, function(err, result) {
+        trustHelper.queryTrusts(req.params.id, req.query, function(err, result) {
             if (err) {
                 req.log.error("trustRoute get failed", err);
                 return res.send(err);
@@ -43,7 +43,7 @@ trustRoute.route('/id/:id')
 
     })
     .post(function(req,res) {
-        trustHelper.addTrust(req.param.id, req.body, function(err, result) {
+        trustHelper.addTrust(req.params.id, req.body, function(err, result) {
             if (err) {
                 req.log.error("trustRoute post failed", err);
                 return res.send(err);
@@ -58,7 +58,7 @@ trustRoute.route('/id/:id')
 
 trustRoute.route('/id/:id/federatedId/:subject')
     .get(function (req, res) {
-        trustHelper.getTrust(req.param.id, req.param.subject, function(err, result) {
+        trustHelper.getTrust(req.params.id, req.params.subject, function(err, result) {
             if (err) {
                 req.log.error("trustRoute get failed", err, req.param.id, req.param.subject);
                 return res.send(err);
