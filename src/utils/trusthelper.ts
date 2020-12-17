@@ -82,20 +82,22 @@ module.exports = {
             logger.error("validate trust failed", error);
             callback(error);
         }
+        else {
 
-        var wrapper = {"item" : trust};
-        wrapper['type'] = "trust";
-        wrapper['mid'] = id;
+            var wrapper = {"item" : trust};
+            wrapper['type'] = "trust";
+            wrapper['mid'] = id;
 
-        sqlStore.createDbItem(wrapper, function(error, result) {
-            if (error) {
-                logger.error("sqlstore create failed", error);
-                callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:error});
-            }
-            else {
-                callback(null, {'id' : result.resource.id, ...result.resource.item});
-            }
-        });
+            sqlStore.createDbItem(wrapper, function(error, result) {
+                if (error) {
+                    logger.error("sqlstore create failed", error);
+                    callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:error});
+                }
+                else {
+                    callback(null, {'id' : result.resource.id, ...result.resource.item});
+                }
+            });
+        }
     },
 
     queryTrusts :  function (id, queryScope, callback) {
