@@ -1,10 +1,11 @@
 const trustRoute = require("express").Router();
 const trustHelper = require("../utils/trusthelper");
+var logger = require("../utils/loghelper").logger;
 
 
 trustRoute.use(function timeLog(req, res, next) {
     var date = new Date();
-    console.log(`trust Got request ${req.method} at time`, date.toLocaleString());
+    logger.debug(`trust Got request ${req.method} at time`, date.toLocaleString());
     next();
 });
 /*
@@ -14,6 +15,7 @@ trustRoute.use(function timeLog(req, res, next) {
 trustRoute.route('/')
     .get(function (req, res) {
         trustHelper.queryTrusts(null, req.query, function(err, result) {
+            logger.debug("in route /");
             if (err) {
                 req.log.error("trustRoute get failed", err);
                 return res.send(err);

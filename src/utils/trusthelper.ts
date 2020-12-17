@@ -48,7 +48,7 @@ function readTrust(id, subject, callback) {
             callback(error);
         }
         else {
-            logger.trace("sqlstore read trust sucess", values);
+            logger.debug("sqlstore read trust sucess", values);
             callback(null, values);
         }
     });
@@ -120,7 +120,7 @@ module.exports = {
                 callback(error);
             }
             else {
-                logger.trace("sqlstore query sucess", values);
+                logger.debug("sqlstore query sucess", values);
                 callback(null, values);
             }
         });
