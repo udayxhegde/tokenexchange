@@ -44,7 +44,7 @@ function readTrust(id, subject, callback) {
 
     sqlStore.fetchQueryDbItem(query, function(error, values) {
         if (error) {
-            logger.error("sqlstore read trust failed", error);
+            logger.error("sqlstore read trust failed %o, %o", error, query);
             callback(error);
         }
         else {
@@ -76,25 +76,31 @@ module.exports = {
      * We can experiment with other patterns here (async, await or promise or something else?)
      */
     addTrust : async function(id, trust, callback) {
-
+        
         var error = validateTrust(trust);
         if (error) {
             logger.error("validate trust failed", error);
             callback(error);
         }
         else {
-
-            var wrapper = {"item" : trust};
-            wrapper['type'] = "trust";
-            wrapper['mid'] = id;
-
-            sqlStore.createDbItem(wrapper, function(error, result) {
+            readTrust(id, trust.subject, function(error, result) {
                 if (error) {
-                    logger.error("sqlstore create failed", error);
-                    callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:error});
+                    var wrapper = {"item" : trust};
+                    wrapper['type'] = "trust";
+                    wrapper['mid'] = id;
+
+                    sqlStore.createDbItem(wrapper, function(error, result) {
+                        if (error) {
+                            logger.error("sqlstore create failed", error);
+                            callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:error});
+                        }
+                        else {
+                            callback(null, {'id' : result.resource.id, ...result.resource.item});
+                        }
+                    });
                 }
                 else {
-                    callback(null, {'id' : result.resource.id, ...result.resource.item});
+                    callback({status: HttpStatus.BAD_REQUEST, message:"subject already exists"});
                 }
             });
         }

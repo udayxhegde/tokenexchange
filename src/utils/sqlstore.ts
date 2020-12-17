@@ -199,25 +199,25 @@ function fetchQueryDbItem(queryStr, callback) {
 
     getContainer(function(error, container) {
         if (error) {
-            logger.error("fetchdb getcontainer failed %s", error);
+            logger.error("fetchdb getcontainer failed %o", error);
             callback(error);
             return;
         }
         container.items.query(querySpec).fetchAll()
         .then(function(result) {
             /* result.resources is the array we are interested in, and contains all of our records*/ 
-            logger.trace("got records", result.resources.length);   
+            logger.trace("got records %d", result.resources.length);   
             var returnArray = [];
             for (var index = 0; index < result.resources.length; index++) {
                 returnArray.push({'id' :result.resources[index].id, ...result.resources[index].item});
             }
-            logger.trace("fetch query dbitem return", returnArray);
+            logger.trace("fetch query dbitem return %o", returnArray);
 
             callback(null, returnArray);
 
         })
         .catch(function(error) {
-            logger.error("fetch query dbitem error", error);
+            logger.error("fetch query dbitem error %o query %o", error, querySpec);
             callback(error);
         });
     });
