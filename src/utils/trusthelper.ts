@@ -5,42 +5,8 @@ var HttpStatus = require('http-status-codes');
 var logger = require("../utils/loghelper").logger;
 var sqlStore = require('../utils/sqlstore');
 var HttpError = require('../utils/HttpError');
+var jsonValidate = require('../utils/jsonvalidate');
 
-
-
-
-//
-// this is our event schema... only details and created are required for now
-//
-const trustSchema = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "type": "object",
-    "required": [ "issuer", "subject"],
-    "additionalProperties": false,
-    "properties": {
-        "issuer": { "type": "string"},  
-        "subject" : { "type": "string"}
-    }
-};
-
-//
-// make sure we are accepting an event that conforms to the schema.
-//
-function validateTrust(trust) {
-  const validateResult = trustValidatorInstance.validate(trust, trustSchema);
-
-  if (validateResult.errors.length) {
-    let errorReturn = "";
-    for(var index = 0; index < validateResult.errors.length; index++) {
-        errorReturn = errorReturn.concat(" " + validateResult.errors[index].message);
-    }
-    return {status: HttpStatus.BAD_REQUEST, message:errorReturn};
-  }
-  else {
-    return null;
-  }
-}
-    
   
 async function readTrust(id, subject) {
     var query = "SELECT * from r where r.type='trust' AND r.mid = '" + id + "' AND r.item.subject = '" + subject +"'";
@@ -82,32 +48,28 @@ module.exports = {
 
     addTrust : async function(id, trust) {
         
-        var error = validateTrust(trust);
-        if (error) {
-            logger.error("validate trust failed", error);
-            throw (error);
-        }
-        else {
-            return readTrust(id, trust.subject)
-            .then(function(result:any) {
-                if (result.length == 0) {
-                    var wrapper = {"item" : trust};
-                    wrapper['type'] = "trust";
-                    wrapper['mid'] = id;
+        return jsonValidate.validateTrust(trust)
+        .then (function(result) {
+            return readTrust(id, trust.subject);
+        })
+        .then(function(result:any) {
+            if (result.length == 0) {
+                var wrapper = {"item" : trust};
+                wrapper['type'] = "trust";
+                wrapper['mid'] = id;
 
-                    return sqlStore.createDbItem(wrapper);
-                }
-                else {
-                    logger.error("trust already exists in add trust, number of trusts %d", result.length);
-                    throw(new HttpError(HttpStatus.BAD_REQUEST, "trust already exists"));
-                }
-            })
-            .then(function(result:any) {
-                logger.debug("add trust done", result);
-                logger.debug(result);
-                return({...result.resource.item})
-            });
-        }
+                return sqlStore.createDbItem(wrapper);
+            }
+            else {
+                logger.error("trust already exists in add trust, number of trusts %d", result.length);
+                throw(new HttpError(HttpStatus.BAD_REQUEST, "trust already exists"));
+            }
+        })
+        .then(function(result:any) {
+            logger.debug("add trust done", result);
+            logger.debug(result);
+            return({...result.resource.item})
+        });
     },
 
     queryTrusts :  async function (id, queryScope) {

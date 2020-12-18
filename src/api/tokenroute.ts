@@ -3,6 +3,7 @@ var identity = require('@azure/identity');
 const tokenHelper = require("../utils/tokenhelper");
 var logger = require("../utils/loghelper").logger;
 var HttpError = require('../utils/HttpError');
+var jsonValidate = require('../utils/jsonvalidate');
 
 tokenRoute.use(function timeLog(req, res, next) {
     var date = new Date();
@@ -16,22 +17,25 @@ tokenRoute.route('/exchange')
     .post(function (req, res) {
         logger.debug("in post token exchange");
         // get token
-        tokenHelper.exchangeToken(req.body.subjectToken, 
-            req.body.clientId, req.body.scopes, req.body.options)
-            .then (function(response) {
-                logger.debug("token exchange, returning object %o", response);
-                return res.json(response);
-            })
-            .catch(function(error) {
-                logger.error("in token exchange post, error %s", error.message);
+        jsonValidate.validatTokenBody(req.body)
+        .then(function(result) {
+            return tokenHelper.exchangeToken(req.body.subjectToken, 
+                req.body.clientId, req.body.scopes, req.body.options)
+        }) 
+        .then (function(response) {
+            logger.debug("token exchange, returning object %o", response);
+            return res.json(response);
+        })
+        .catch(function(error) {
+            logger.error("in token exchange post, error %s", error.message);
 
-                if (error instanceof HttpError) {
-                    return res.status(error.status).send(error.message);
-                }
-                else {
-                    return res.status(500).send(error);
-                }
-            })
+            if (error instanceof HttpError) {
+                return res.status(error.status).send(error.message);
+            }
+            else {
+                return res.status(500).send(error);
+            }
+        })
     });
     
 module.exports = tokenRoute;
