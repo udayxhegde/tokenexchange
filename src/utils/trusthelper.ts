@@ -4,6 +4,9 @@ const trustValidatorInstance = new trustValidator();
 var HttpStatus = require('http-status-codes');
 var logger = require("../utils/loghelper").logger;
 var sqlStore = require('../utils/sqlstore');
+var HttpError = require('../utils/HttpError');
+
+
 
 
 //
@@ -39,78 +42,69 @@ function validateTrust(trust) {
 }
     
   
-function readTrust(id, subject, callback) {
+async function readTrust(id, subject) {
     var query = "SELECT * from r where r.type='trust' AND r.mid = '" + id + "' AND r.item.subject = '" + subject +"'";
 
-    sqlStore.fetchQueryDbItem(query, function(error, values) {
-        if (error) {
-            logger.error("sqlstore read trust failed %o, %o", error, query);
-            callback(error);
-        }
-        else {
-            logger.debug("sqlstore read trust sucess %o", values);
-            callback(null, values);
-        }
+    return sqlStore.fetchQueryDbItem(query)
+    .then(function(values) {
+        logger.debug("sqlstore read trust sucess %o", values);
+        return(values);
+    })
+    .catch(function(error) {
+        logger.error("sqlstore read trust failed %o, %o", error, query);
+        throw(error);
     });
 }
 
 module.exports = {  
-/*
-     * Get event is very simple, read the cosmosdb for the id we got, and get the item
-     * then pick the item object from the db item, and return it back as a key value pair {id, item}
-     * the read returns a promise, so we have .then and .catch: but then we convert this back to the normal
-     * callback pattern
-     * We can experiment with other patterns here (async, await or promise or something else?)
-     */
-    getTrust :  function (id, subject, callback) {
-        readTrust(id, subject, callback);
+  
+    getTrust : async function (id, subject) {
+        logger.debug("in get trust with id %s sub %s", id, subject);
+        return readTrust(id, subject)
+        .then(function(result) {
+            if (result.length == 1) {
+                return result;
+            }
+            else if (result.length == 0) {
+                throw(new HttpError(HttpStatus.NOT_FOUND, "item note found"));
+            }
+            else {
+                throw(new HttpError(HttpStatus.INTERNAL_SERVER_ERROR, "incorrect trust config"));
+            }
+        });
     },
 
-    /*
-     * add event is very simple, create a wrapper object within which we add our event object. We are doing this because
-     * when we add the object to cosmosdb, it adds a bunch of tags and headers. So this provides an easy way to extract 
-     * what we need, rather than have to strip out the other things before we return the object back in our API
-     * On success, we return back the id for this note, along with the note. {id, note}
-     * the create returns a promise, so we have .then and .catch: but then we convert this back to the normal
-     * callback pattern
-     * We can experiment with other patterns here (async, await or promise or something else?)
-     */
-    addTrust : async function(id, trust, callback) {
+    addTrust : async function(id, trust) {
         
         var error = validateTrust(trust);
         if (error) {
             logger.error("validate trust failed", error);
-            callback(error);
+            throw (error);
         }
         else {
-            readTrust(id, trust.subject, function(error, result) {
-                if (error) {
-                    logger.error("sqlstore create failed", error);
-                    callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:error});
-                }
-                else if (result.length > 0) {
-                    logger.error("trust already exists in add trust, number of trusts %d", result.length);
-                    callback({status: HttpStatus.BAD_REQUEST, message:"trust already exists"});
-                }
-                else {
+            return readTrust(id, trust.subject)
+            .then(function(result:any) {
+                if (result.length == 0) {
                     var wrapper = {"item" : trust};
                     wrapper['type'] = "trust";
                     wrapper['mid'] = id;
 
-                    sqlStore.createDbItem(wrapper, function(error, result) {
-                        if (error) {
-                            callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:error});
-                        }
-                        else {
-                            callback(null, {...result.resource.item});
-                        }
-                    });
+                    return sqlStore.createDbItem(wrapper);
                 }
+                else {
+                    logger.error("trust already exists in add trust, number of trusts %d", result.length);
+                    throw(new HttpError(HttpStatus.BAD_REQUEST, "trust already exists"));
+                }
+            })
+            .then(function(result:any) {
+                logger.debug("add trust done", result);
+                logger.debug(result);
+                return({...result.resource.item})
             });
         }
     },
 
-    queryTrusts :  function (id, queryScope, callback) {
+    queryTrusts :  async function (id, queryScope) {
        /*
         * Since we are using the SQL format in cosmosdb (and not mongo for example), we craft up a query we need
         * this query is saying find all the object in my container which has a note object in it. 
@@ -126,35 +120,28 @@ module.exports = {
             query = query.concat(" AND r.item." + key + "= '" + queryScope[key] +"'");
         }
 
-        sqlStore.fetchQueryDbItem(query, function(error, values) {
-            if (error) {
-                logger.error("sqlstore query failed", error);
-                callback(error);
-            }
-            else {
-                logger.debug("sqlstore query sucess", values);
-                callback(null, values);
-            }
+        return sqlStore.fetchQueryDbItem(query)
+        .then(function(values:any) {
+            logger.debug("in query trusts returning values %o", values)
+            return values;
         });
     },
 
-    deleteTrust : function( id, subject, callback ) {
-        readTrust(id, subject, function(err, result) {
-            if (err) {
-                callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:err});
+    deleteTrust : async function( id, subject ) {
+        return readTrust(id, subject)
+        .then(function(result:any) {
+            logger.debug(result);
+            logger.debug("in deleter trust found %d", result.length);
+
+            if (result.length == 1) {
+                return sqlStore.deleteDbItem(result[0].id);                
             }
-            else {
-                if (result.length == 0) {
-                    callback({status: HttpStatus.NOT_FOUND, message:"no matching trust"});      
-                }
-                else if (result.length > 1) {
-                    callback({status: HttpStatus.INTERNAL_SERVER_ERROR, message:"more than one trust"});      
-                } 
-                else {
-                    sqlStore.deleteDbItem(result[0].id, callback);
-                    callback(null, result.id);
-                }
+            else if (result.length == 0) {
+                throw new HttpError(HttpStatus.NOT_FOUND, "no matching trust");      
             }
-        })
+            else if (result.length > 1) {
+                throw new HttpError(HttpStatus.INTERNAL_SERVER_ERROR, "more than one trust");      
+            } 
+        });
     }
 };
