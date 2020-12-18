@@ -23,7 +23,7 @@ async function validateToken(subjectToken, clientID)
         return true;
     }
     catch(error) {
-        logger.error("validate token error %o", error);
+        logger.error("validate token error %s", error.message);
         if (error instanceof HttpError) {
             if (error.status == HttpStatus.NOT_FOUND) {
                 throw new HttpError(HttpStatus.FORBIDDEN, error.message);

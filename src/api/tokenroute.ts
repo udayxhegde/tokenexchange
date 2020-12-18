@@ -23,7 +23,7 @@ tokenRoute.route('/exchange')
                 return res.json(response);
             })
             .catch(function(error) {
-                logger.error("in token exchange post, error %o", error);
+                logger.error("in token exchange post, error %s", error.message);
 
                 if (error instanceof HttpError) {
                     return res.status(error.status).send(error.message);
