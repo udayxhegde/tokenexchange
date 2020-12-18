@@ -26,10 +26,10 @@ tokenRoute.route('/exchange')
                 logger.error("in token exchange post, error %o", error);
 
                 if (error instanceof HttpError) {
-                    return res.status(error.status).send(error);
+                    return res.status(error.status).send(error.message);
                 }
                 else {
-                    return res.status(500).send();
+                    return res.status(500).send(error);
                 }
             })
     });

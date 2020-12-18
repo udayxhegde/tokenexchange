@@ -26,7 +26,7 @@ async function validateToken(subjectToken, clientID)
         logger.error("validate token error %o", error);
         if (error instanceof HttpError) {
             if (error.status == HttpStatus.NOT_FOUND) {
-                throw new HttpError(HttpStatus.FORBIDDEN, "matching trust not found");
+                throw new HttpError(HttpStatus.FORBIDDEN, error.message);
             }
         }
         throw(error);
@@ -62,7 +62,7 @@ async function exchangeToken(subjectToken, clientID, scopes, options)
         }
         else {
             logger.debug("validate token failed");
-            throw new Error("invalid token");
+            throw new HttpError(HttpStatus.BAD_REQUEST, "invalid token");
         }
     });
 }
