@@ -17,7 +17,7 @@ tokenRoute.route('/exchange')
     .post(function (req, res) {
         logger.debug("in post token exchange");
         // get token
-        jsonValidate.validatTokenBody(req.body)
+        jsonValidate.validateTokenBody(req.body)
         .then(function(result) {
             return tokenHelper.exchangeToken(req.body.subjectToken, 
                 req.body.clientId, req.body.scopes, req.body.options)
