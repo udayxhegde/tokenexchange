@@ -66,10 +66,14 @@ module.exports = {
                 return result;
             }
             else if (result.length == 0) {
+                logger.debug("trust not found");
+
                 var error = "Id " + id + " subject " + subject + "Trust not found";
                 throw(new HttpError(HttpStatus.NOT_FOUND, error));
             }
             else {
+                logger.debug("too many trusts found");
+
                 var error = "multiple trusts found. Found " + result.length + "trusts for id " + id + " subject " + subject;
                 throw(new HttpError(HttpStatus.INTERNAL_SERVER_ERROR, error));
             }
