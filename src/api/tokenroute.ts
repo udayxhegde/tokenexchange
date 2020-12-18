@@ -2,7 +2,7 @@ const tokenRoute = require("express").Router();
 var identity = require('@azure/identity');
 const tokenHelper = require("../utils/tokenhelper");
 var logger = require("../utils/loghelper").logger;
-
+var HttpError = require('../utils/HttpError');
 
 tokenRoute.use(function timeLog(req, res, next) {
     var date = new Date();

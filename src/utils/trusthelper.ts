@@ -66,10 +66,12 @@ module.exports = {
                 return result;
             }
             else if (result.length == 0) {
-                throw(new HttpError(HttpStatus.NOT_FOUND, "item note found"));
+                var error = "Id " + id + " subject " + subject + "Trust not found";
+                throw(new HttpError(HttpStatus.NOT_FOUND, error));
             }
             else {
-                throw(new HttpError(HttpStatus.INTERNAL_SERVER_ERROR, "incorrect trust config"));
+                var error = "multiple trusts found. Found " + result.length + "trusts for id " + id + " subject " + subject;
+                throw(new HttpError(HttpStatus.INTERNAL_SERVER_ERROR, error));
             }
         });
     },

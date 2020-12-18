@@ -32,31 +32,14 @@ trustRoute.route('/')
             req.log.error("trustRoute get failed %o", error);
 
             if (error instanceof HttpError) {
-                res.status(error.status).send(error);
+                res.status(error.status).send(error.message);
             }
             else {
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
             }
         }
     });
-    /*
-        trustHelper.queryTrusts(null, req.query)
-        .then(function(result:any) {
-            req.log.trace("trustRoute get success");
-            return res.json(result);
-        })
-     ;   .catch(function(error) {
-            req.log.error("trustRoute get failed %o", error);
-
-            if (error instanceof HttpError) {
-                res.status(error.status).send(error);
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
-            }
-        });
-    });
-*/
+    
 
 trustRoute.route('/id') 
     .get(function(_req, res) {
@@ -72,7 +55,7 @@ trustRoute.route('/id/:id')
             req.log.error("trustRoute get id failed %o", error);
 
             if (error instanceof HttpError) {
-                res.status(error.status).send(error);
+                res.status(error.status).send(error.message);
             }
             else {
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
@@ -90,7 +73,7 @@ trustRoute.route('/id/:id')
             logger.error(error);
             req.log.error("trustRoute post failed", error);
             if (error instanceof HttpError) {
-                res.status(error.status).send(error);
+                res.status(error.status).send(error.message);
             }
             else {
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
@@ -110,7 +93,7 @@ trustRoute.route('/id/:id/federatedId/:subject')
         catch(error) {
             req.log.error("trustRoute get id subject failed", error);
             if (error instanceof HttpError) {
-                res.status(error.status).send(error);
+                res.status(error.status).send(error.message);
             }
             else {
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);
@@ -126,7 +109,7 @@ trustRoute.route('/id/:id/federatedId/:subject')
         catch(error) {
             req.log.error("trustRoute delete id subject failed", error);
             if (error instanceof HttpError) {
-                res.status(error.status).send(error);
+                res.status(error.status).send(error.message);
             }
             else {
                 res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(error);

@@ -3,6 +3,7 @@ var logger = require("./loghelper").logger;
 const jwt = require("jsonwebtoken");
 const identity = require('@azure/identity');
 var trustHelper = require("./trusthelper");
+var HttpError = require('../utils/HttpError');
 
 
 async function validateToken(subjectToken, clientID)

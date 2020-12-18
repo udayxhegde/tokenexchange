@@ -3,35 +3,32 @@
 Code experiment, to send a token and request an AAD access token for a given managed identity
 
 Getting Started
+This has 2 APIs
 
-Run this code in an Azure Webapp, and configure the webapp with as many user managed identities as needed.
-
-The idea is that you can first setup a trust for a foreign token with a managed id.
-And then later on ask for a token exchange, by sending the foreigh token and asking for an access token for the managed identity.
-
-The trust setup (currently not implemented) is setup by calling /api/trust with {iss: <url>, sub: <subject name in incoming token>}, and client_id of managed identity. 
-
-The token exchange (currently implemented, and it always assumes the incomging token is trusted and always returns an access token, till trust api is implemented), is called at /api/token/exchange with a json containing: 
+POST /api/token/exchange with body:
     subjectToken : <..>,
     clientId: <managed id for which token is requested>,
     scopes: <...>,
     options: <...>
 
+if subjectoken has subject and issuer as trusted on clientid, a token is issued (issuer is not checked right now)
 
-Prerequisites
+GET /api/trust/ returns all trusts
+GET /api/trust/id returns all managed ids that can be used
+GET /api/trust/id/:id returns all trust for managed id
+GET /api/trust/id/:id/federatedid/:subject gets the trust if it exists for that subject on id
 
-run this in a webapp in Azure that is assigned multiple managed identities.
-Make sure these identities are granted access to the resources in Azure such as keyvault, storage and others: so that when you get an access token you can check that you can access those resources.
+POST /api/trust/id/:id with body {issuer:<issuer>, subject:<subject>}. 
+Subject has to be unique on a given id, otherwise error
+
+DELETE /api/trust/id/:id/federatedid/:subject deletes the trust
+
+examples:
+GET /api/trust/id/e51a646e-abb0-4c17-af80-2072586c09be/
+POST /api/trust/id/e51a646e-abb0-4c17-af80-2072586c09be
+body { "issuer": issuer url,    "subject":"system:serviceaccount:tf-team1-ns:tf-team1-sa1"}
 
 Installing
 
 npm run build, builds the js files
 npm run start, runs the server
-
-Running:
-This implements 1 api:
-post: /api/token/exchange
-
-2 other APIs are still work in progress:
-post and get: /api/trust
-
