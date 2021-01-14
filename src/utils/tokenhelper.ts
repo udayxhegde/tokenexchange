@@ -18,12 +18,21 @@ async function validateToken(subjectToken, clientID)
         logger.debug("validate token header %o", decoded.header);
         logger.debug("validate token payload %o", decoded.payload);
         logger.info("issuer %s subject %s", decoded.payload.iss, decoded.payload.sub);
+    }
+    catch(error) {
+        logger.error("validate token error %s", error.message);
+
+        throw new HttpError(HttpStatus.BAD_REQUEST, "Token is not valid");
+    }
+
+    try {
         await trustHelper.getTrust(clientID, decoded.payload.sub);
         logger.info("found issuer and sub");
         return true;
     }
     catch(error) {
-        logger.error("validate token error %s", error.message);
+        logger.error("get trust error %s", error.message);
+
         if (error instanceof HttpError) {
             if (error.status == HttpStatus.NOT_FOUND) {
                 throw new HttpError(HttpStatus.FORBIDDEN, error.message);
