@@ -37,5 +37,30 @@ tokenRoute.route('/exchange')
             }
         })
     });
+
+tokenRoute.route('/forceexchange')
+    .post(function (req, res) {
+        logger.debug("in post token exchange");
+        // get token
+        jsonValidate.validateTokenBody(req.body)
+        .then(function(result) {
+            return tokenHelper.getAADToken(req.body.clientId, 
+                req.body.scopes, req.body.options);
+        }) 
+        .then (function(response) {
+            logger.debug("token exchange, returning object %o", response);
+            return res.json(response);
+        })
+        .catch(function(error) {
+            logger.error("in token exchange post, error %s", error.message);
+
+            if (error instanceof HttpError) {
+                return res.status(error.status).send(error.message);
+            }
+            else {
+                return res.status(500).send(error);
+            }
+        })
+    });
     
 module.exports = tokenRoute;

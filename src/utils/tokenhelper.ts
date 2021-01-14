@@ -43,31 +43,35 @@ async function validateToken(subjectToken, clientID)
 
 }
 
+async function getAADToken(clientID, scopes, options) 
+{
+    logger.info("in token exchange for id %s and scopes %o", clientID, scopes);
+
+    const credential = new identity.ManagedIdentityCredential(clientID);
+    return credential.getToken(scopes, options)
+        .then(function(response) {
+            if (response) {
+                var decoded = jwt.decode(response.token, {complete: true});
+                logger.debug("exchange token: new token header %o", decoded.header);
+                logger.debug("exchange token: new token payload %o", decoded.payload);
+            }
+            else {
+                logger.info("exchange token, empty token return")
+            }
+            return response;
+        })
+        .catch(function(error) {
+            logger.info("exchange token, exception error %o", error);
+
+            throw (error);
+        });
+}
 async function exchangeToken(subjectToken, clientID, scopes, options)
 {
     return validateToken(subjectToken, clientID)
     .then(function(result) {
         if (result) {
-            logger.info("in token exchange for id %s and scopes %o", clientID, scopes);
-
-            const credential = new identity.ManagedIdentityCredential(clientID);
-            return credential.getToken(scopes, options)
-                .then(function(response) {
-                    if (response) {
-                        var decoded = jwt.decode(response.token, {complete: true});
-                        logger.debug("exchange token: new token header %o", decoded.header);
-                        logger.debug("exchange token: new token payload %o", decoded.payload);
-                    }
-                    else {
-                        logger.info("exchange token, empty token return")
-                    }
-                    return response;
-                })
-                .catch(function(error) {
-                    logger.info("exchange token, exception error %o", error);
-
-                    throw (error);
-                });
+            return getAADToken(clientID, scopes, options);
         }
         else {
             logger.debug("validate token failed");
@@ -76,4 +80,4 @@ async function exchangeToken(subjectToken, clientID, scopes, options)
     });
 }
 
-module.exports= {exchangeToken};
+module.exports= {exchangeToken, getAADToken};
